@@ -17,7 +17,7 @@ import java.io.*;
 class RecvingThread extends Thread{
     DatagramSocket clientSocket;
     private int frameReceived;
-    private final int frameSize = 256;
+    private static final int frameSize = 256;
     FileOutputStream output;
     
     
@@ -74,7 +74,7 @@ class RecvingThread extends Thread{
 }
 
 public class Receive{
-    static DatagramSocket clientSocket;
+    DatagramSocket clientSocket;
     private static int frameReceived = 0;
     private static final int frameSize = 256;
     private static final int initialFrames = 2000;
@@ -82,7 +82,7 @@ public class Receive{
     
     
     public Receive(DatagramSocket clientSocket, FileOutputStream output){
-        Receive.clientSocket = clientSocket;
+        this.clientSocket = clientSocket;
         this.output = output;
     }
     
@@ -111,9 +111,6 @@ public class Receive{
 
             
             output.write(recv.getData(), 0, recv.getLength());
-            
-            
-            flag_regulate = regulate();
 
             
             dataReceived = new byte[frameSize];
@@ -122,6 +119,16 @@ public class Receive{
             
             
             flag_exit = !new String(recv.getData()).trim().equals(testString.trim());
+            flag_regulate = regulate();
+        }
+        
+        
+        if(flag_exit){
+            frameReceived++; 
+            System.out.println("Receiving Frame: " + frameReceived); 
+            
+            
+            output.write(recv.getData(), 0, recv.getLength());
         }
         
         return(true);

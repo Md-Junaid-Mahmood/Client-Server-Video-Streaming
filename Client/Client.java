@@ -34,46 +34,48 @@ public class Client extends Application{
     private Media media;
     private MediaPlayer mediaPlayer;
     private MediaView mediaView;
-    private static String directory;
-
-    private static final int serverPort = 8000;
-    private static final String serverAddress = "localHost";
-    private static int frameReceived = 0;
-    private static final int frameSize = 256;
-    private static final int initialFrames = 2000;
     
-    static DatagramSocket clientSocket;
+    private String directory;
 
-    public static void main(String[] args) throws SocketException, UnknownHostException, IOException {  
-      clientSocket = new DatagramSocket();
+    private static final int serverSendingPort = 8000;
+    private static final int serverReceivingPort = 8080;
+    private static final String serverAddress = "localHost";
+
+    private static final int frameSize = 256;
+    DatagramSocket clientSocket;
+
+    public static void main(String[] args) throws SocketException, UnknownHostException, IOException { 
+      Client client = new Client();  
+        
+      client.clientSocket = new DatagramSocket();
       byte dataReceived[] = new byte[frameSize];
 
       
-      sendConnectionRequest();
+      client.sendConnectionRequest();
       
       
       DatagramPacket optionPack = new DatagramPacket(dataReceived, dataReceived.length);
-      clientSocket.receive(optionPack);
+      client.clientSocket.receive(optionPack);
       System.out.println(new String(optionPack.getData()).trim());
       
       
-      int choice = sendChoice();
+      int choice = client.sendChoice();
     
       
       dataReceived = new byte[frameSize];
       DatagramPacket dirInfo = new DatagramPacket(dataReceived, dataReceived.length);
-      clientSocket.receive(dirInfo);
+      client.clientSocket.receive(dirInfo);
       
       
-      String dir = createDirectory(dirInfo);
-      String path = getPath(dir, choice);
+      String dir = client.createDirectory(dirInfo);
+      String path = client.getPath(dir, choice);
     
       
-      fileOutput = new File(path);
-      FileOutputStream output = new FileOutputStream(fileOutput);  
+      client.fileOutput = new File(path);
+      FileOutputStream output = new FileOutputStream(client.fileOutput);  
       
       
-      Receive newReceive = new Receive(clientSocket, output);
+      Receive newReceive = new Receive(client.clientSocket, output);
       boolean flag = newReceive.startReceiving();
       
       
@@ -81,7 +83,7 @@ public class Client extends Application{
     }  
     
     
-    private static void sendConnectionRequest() throws UnknownHostException, IOException{
+    private void sendConnectionRequest() throws UnknownHostException, IOException{
         String initialMessage = new String("Connection Request");
         
         byte dataSent[] = new byte[frameSize];
@@ -89,12 +91,12 @@ public class Client extends Application{
 
 
         InetAddress address = InetAddress.getByName(serverAddress);
-        DatagramPacket initialSentPacket = new DatagramPacket(dataSent, dataSent.length, address, serverPort);
+        DatagramPacket initialSentPacket = new DatagramPacket(dataSent, dataSent.length, address, serverSendingPort);
         clientSocket.send(initialSentPacket);
     }
     
     
-    private static int sendChoice() throws UnknownHostException, IOException{
+    private int sendChoice() throws UnknownHostException, IOException{
         Scanner sc = new Scanner(System.in);
         int choice = sc.nextInt();
         String choice_String = Integer.toString(choice);
@@ -104,14 +106,14 @@ public class Client extends Application{
         dataSent = choice_String.getBytes();
 
         InetAddress address = InetAddress.getByName(serverAddress);
-        DatagramPacket choice_Packet = new DatagramPacket(dataSent, dataSent.length, address, serverPort);
+        DatagramPacket choice_Packet = new DatagramPacket(dataSent, dataSent.length, address, serverSendingPort);
         clientSocket.send(choice_Packet);
         
         return(choice);
     }
     
     
-    private static String createDirectory(DatagramPacket dirInfo){
+    private String createDirectory(DatagramPacket dirInfo){
         String dir = new String(dirInfo.getData());
         dir = dir.trim();
       
@@ -124,7 +126,7 @@ public class Client extends Application{
     }
 
     
-    private static String getPath(String dir, int choice) {
+    private String getPath(String dir, int choice) {
         String path = new String("L");
         path = path.concat(Integer.toString(choice));
         path = path.concat(".mp4");
@@ -175,7 +177,6 @@ public class Client extends Application{
         });
         
         exit.setOnAction((ActionEvent e) -> {
-            clientSocket.close();
             System.exit(0);
         });
         

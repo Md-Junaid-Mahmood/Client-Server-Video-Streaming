@@ -22,31 +22,26 @@ import java.util.ArrayList;
 
 
 public class Stream{
-    static DatagramSocket serverSocket;
-    private static final ArrayList<String> list_Videos = new ArrayList<String>();
+    DatagramSocket serverSocket;
     int client_id;
     int frameSize = 256;
-    String options;
-    
+    private ArrayList<String> list_Videos;
 
     public Stream(DatagramSocket serverSocket, int client_id){
-        Stream.serverSocket = serverSocket;
+        this.serverSocket = serverSocket;
         this.client_id = client_id;
+        
+        
+                
+        list_Videos = new ArrayList<String>();
+        
         list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L1.mp4");
         list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L2.mp4");
-        options = new String("Welcome to the Server\nPress 1 for seeing L1.mp4\nPress 2 for seeing L2.mp4");
     }
     
     
-    public void startStreaming(int portAddr, InetAddress inetAddr) throws IOException{
+    public void startStreaming(int portAddr, InetAddress inetAddr, String choice) throws IOException{
         byte dataReceived[] = new byte[frameSize]; 
-        
-
-        sendOptions(portAddr, inetAddr);
-        
-        
-        DatagramPacket choice = new DatagramPacket(dataReceived, dataReceived.length);
-        serverSocket.receive(choice);
         
                 
         String path = processPath(choice);
@@ -59,32 +54,9 @@ public class Stream{
         streamVideo.start();
     }
     
-
-    private void sendOptions(int portAddr, InetAddress inetAddr) throws IOException{
-        byte dataSent[] = new byte[frameSize]; 
-        dataSent = options.getBytes();
-        
-
-        DatagramPacket initialResponse;
-        initialResponse= new DatagramPacket(dataSent, dataSent.length, inetAddr, portAddr);
-        serverSocket.send(initialResponse);
-    }
     
-    
-    
-    private void sendDirInfo(int portAddr, InetAddress inetAddr) throws IOException{
-        byte dataSent[] = new byte[frameSize]; 
-        dataSent = Integer.toString(client_id).getBytes();
-        
-
-        DatagramPacket dirResponse;
-        dirResponse = new DatagramPacket(dataSent, dataSent.length, inetAddr, portAddr);
-        serverSocket.send(dirResponse);
-    }
-    
-    
-    private String processPath(DatagramPacket choice) throws IOException{
-        int chosen = Integer.parseInt(new String(choice.getData()).trim());
+    private String processPath(String choice) throws IOException{
+        int chosen = Integer.parseInt(choice);
         chosen--;
         
         
@@ -96,6 +68,17 @@ public class Stream{
         System.out.println("Choice given by the User" + client_id + ": " + chosen);
         String path = new String(list_Videos.get(chosen));
         return(path);
+    }
+    
+    
+    private void sendDirInfo(int portAddr, InetAddress inetAddr) throws IOException{
+        byte dataSent[] = new byte[frameSize]; 
+        dataSent = Integer.toString(client_id).getBytes();
+        
+
+        DatagramPacket dirResponse;
+        dirResponse = new DatagramPacket(dataSent, dataSent.length, inetAddr, portAddr);
+        serverSocket.send(dirResponse);
     }
 }
 
@@ -175,7 +158,7 @@ class ReplyingThread extends Thread{
         
         while(count != -1){
             frameSent++;
-            System.out.println("Sending Frame: " + frameSent);
+         //   System.out.println("Sending Frame: " + frameSent);
             
 
             DatagramPacket toSent = new DatagramPacket(dataSent, dataSent.length, inetAddr, portAddr);
