@@ -21,88 +21,39 @@ import java.net.InetAddress;
 import java.util.ArrayList;
 
 
-public class Stream{
-    DatagramSocket serverSocket;
-    int client_id;
-    int frameSize = 256;
-    private ArrayList<String> list_Videos;
-
-    public Stream(DatagramSocket serverSocket, int client_id){
-        this.serverSocket = serverSocket;
-        this.client_id = client_id;
-        
-        
-                
-        list_Videos = new ArrayList<String>();
-        
-        list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L1.mp4");
-        list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L2.mp4");
-    }
-    
-    
-    public void startStreaming(int portAddr, InetAddress inetAddr, String choice) throws IOException{
-        byte dataReceived[] = new byte[frameSize]; 
-        
-                
-        String path = processPath(choice);
-        
-               
-        sendDirInfo(portAddr, inetAddr);
-        
-        
-        ReplyingThread streamVideo = new ReplyingThread(portAddr, inetAddr, path, serverSocket);
-        streamVideo.start();
-    }
-    
-    
-    private String processPath(String choice) throws IOException{
-        int chosen = Integer.parseInt(choice);
-        chosen--;
-        
-        
-        if(chosen >= list_Videos.size() || chosen < 0){
-            chosen = 0;
-        }
-        
-        
-        System.out.println("Choice given by the User" + client_id + ": " + chosen);
-        String path = new String(list_Videos.get(chosen));
-        return(path);
-    }
-    
-    
-    private void sendDirInfo(int portAddr, InetAddress inetAddr) throws IOException{
-        byte dataSent[] = new byte[frameSize]; 
-        dataSent = Integer.toString(client_id).getBytes();
-        
-
-        DatagramPacket dirResponse;
-        dirResponse = new DatagramPacket(dataSent, dataSent.length, inetAddr, portAddr);
-        serverSocket.send(dirResponse);
-    }
-}
-
-
-
-
-class ReplyingThread extends Thread{
+class Stream extends Thread implements Network.NetworkInterface{
     private final int portAddr;
     private final InetAddress inetAddr;
     private final String path;
     private final DatagramSocket serverSocket;
 
-    private static final int frameSize = 256;
+    
+    private static final int frameSize = Network.NetworkInterface.frameSize;
     private int frameSent = 0;
-    private static final int sleepingTime = 100;
-    private static final int frameStreamSize = 50;
-    private final int initialFrames = 2500;
+    private static final int sleepingTime = Network.NetworkInterface.sleepingTime;
+    private static final int frameStreamSize = Network.NetworkInterface.frameStreamSize;
+    private final int initialFrames = Network.NetworkInterface.initialFrames;
     
     
+    private static ArrayList<String> list_Videos;
+    private static ArrayList<Long> video_Info;
+    private final int choice;
+    private final int numOfVideo = 3;
     
-    public ReplyingThread(int portAddr, InetAddress inetAddr, String path, DatagramSocket serverSocket){
+    public Stream(int portAddr, InetAddress inetAddr, int choice, DatagramSocket serverSocket) throws IOException{
+        list_Videos = new ArrayList<String>();
+        
+        list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L1.mp4");
+        list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L2.mp4");
+        list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L3.mp4");
+        
+        video_Info = new ArrayList<Long>();
+        processPathLength();
+        
         this.portAddr = portAddr;
         this.inetAddr = inetAddr;
-        this.path = path;
+        this.choice = choice;
+        this.path = processPath(this.choice);
         this.serverSocket = serverSocket;
     }
 
@@ -113,6 +64,7 @@ class ReplyingThread extends Thread{
         InputStream input = createInputStream();
         
         try{
+            sendVideoSize(choice);
             startSending(input);
         }catch(IOException ex){
             System.out.println("IOException in startSending() method");
@@ -131,6 +83,8 @@ class ReplyingThread extends Thread{
         }catch(IOException ex) {
             System.out.println("IOException in startSending() method");
         }
+        
+        while(true);
     }
     
     
@@ -158,7 +112,7 @@ class ReplyingThread extends Thread{
         
         while(count != -1){
             frameSent++;
-         //   System.out.println("Sending Frame: " + frameSent);
+       //     System.out.println("Sending Frame: " + frameSent);
             
 
             DatagramPacket toSent = new DatagramPacket(dataSent, dataSent.length, inetAddr, portAddr);
@@ -181,6 +135,10 @@ class ReplyingThread extends Thread{
         if(frameSent % frameStreamSize == 0){
             Thread.sleep(sleepingTime);
         }
+        
+        if(frameSent == initialFrames){
+            Thread.sleep(sleepingTime);
+        }
     }
     
     
@@ -194,5 +152,44 @@ class ReplyingThread extends Thread{
         
         DatagramPacket finalSent = new DatagramPacket(dataSent, dataSent.length, inetAddr, portAddr);
         serverSocket.send(finalSent);
+    }
+    
+    
+    private String processPath(int chosen) throws IOException{
+        chosen--;
+        
+        
+        if(chosen >= numOfVideo || chosen < 0){
+            chosen = 0;
+        }
+        
+        
+        String path = new String(list_Videos.get(chosen));
+        return(path);
+    }
+    
+    
+    private void sendVideoSize(int chosen) throws IOException{
+        chosen--;
+        
+        
+        if(chosen >= numOfVideo || chosen < 0){
+            chosen = 0;
+        }
+        
+        
+        byte dataSent[] = new byte[frameSize];
+        dataSent = Long.toString(video_Info.get(chosen)).getBytes();
+        DatagramPacket videoSize = new DatagramPacket(dataSent, dataSent.length, inetAddr, portAddr);
+        serverSocket.send(videoSize);
+    }
+    
+    
+    private void processPathLength(){
+        for(int i = 0; i < list_Videos.size(); i++){
+            File file = new File(list_Videos.get(i));
+            video_Info.add((long)file.length());
+        }
+      //  System.out.println(video_Info);
     }
 }

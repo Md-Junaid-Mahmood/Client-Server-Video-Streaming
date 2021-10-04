@@ -1,0 +1,1 @@
+Remote audio/video playback: Play, Pause, Rewind, Forward, Next, Previous (Design for n-client/ Test for 5 clients).					
