@@ -33,6 +33,7 @@ class Stream extends Thread implements Network.NetworkInterface{
     private static final int sleepingTime = Network.NetworkInterface.sleepingTime;
     private static final int frameStreamSize = Network.NetworkInterface.frameStreamSize;
     private final int initialFrames = Network.NetworkInterface.initialFrames;
+    private static final String pathProg = Network.NetworkInterface.pathProgram;
     
     
     private static ArrayList<String> list_Videos;
@@ -43,9 +44,9 @@ class Stream extends Thread implements Network.NetworkInterface{
     public Stream(int portAddr, InetAddress inetAddr, int choice, DatagramSocket serverSocket) throws IOException{
         list_Videos = new ArrayList<String>();
         
-        list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L1.mp4");
-        list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L2.mp4");
-        list_Videos.add("/home/md/NetBeansProjects/Video Streaming/src/Server/Video/L3.mp4");
+        list_Videos.add(pathProg.concat("/Server/Video/L1.mp4"));
+        list_Videos.add(pathProg.concat("/Server/Video/L2.mp4"));
+        list_Videos.add(pathProg.concat("/Server/Video/L3.mp4"));
         
         video_Info = new ArrayList<Long>();
         processPathLength();

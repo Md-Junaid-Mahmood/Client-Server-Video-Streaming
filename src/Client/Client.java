@@ -39,6 +39,9 @@ public class Client extends Application implements Network.NetworkInterface{
     private static final int serverSendingPort = Network.NetworkInterface.receiving_port;
     private static final int serverReceivingPort = Network.NetworkInterface.replying_port;
     private static final String serverAddress = Network.NetworkInterface.serverAddress;
+    private static final String pathProg = Network.NetworkInterface.pathProgram;
+    
+    
     private static String clientID = new String("");
     private static final int numOfVideo = 3;
 
@@ -186,7 +189,7 @@ public class Client extends Application implements Network.NetworkInterface{
         dir = dir.trim();
       
         
-        directory = new String("/home/md/NetBeansProjects/Video Streaming/src/User");
+        directory = new String(pathProg.concat("/User"));
         directory = directory.concat(dir);
         directory = directory.concat("/");
         new File(directory).mkdir();

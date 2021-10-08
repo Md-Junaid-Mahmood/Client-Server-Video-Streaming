@@ -19,4 +19,6 @@ public interface NetworkInterface{
     int waitingTime = 3000;
     int frameStreamSize = 50;
     int initialFrames = 2000;
+    
+    String pathProgram = new String("/home/md/NetBeansProjects/Video Streaming/src");
 }
